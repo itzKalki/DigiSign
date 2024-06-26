@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DigiSign</title>
+    <style>
+      h1 {
+        h1 {
+          font-size: 3rem; /* Large font size */
+          font-weight: bold; /* Bold text */
+          color: #007bff; /* Attractive blue color */
+          text-align: center; /* Center the text */
+          margin: 20px 0; /* Margin for spacing */
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle text shadow */
+          letter-spacing: 1px; /* Increase letter spacing */
+          font-family: "Arial", sans-serif; /* Font family */
+          background: -webkit-linear-gradient(
+            #ff7e5f,
+            #feb47b
+          ); /* Gradient text color */
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+      }
+      .main {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      canvas {
+        border: 2px solid black;
+        background-color: #ffffff; /* Initial canvas background color */
+      }
+      .top,
+      .bottom {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 5%;
+        margin: 10px 0 10px 0;
+      }
+      .block,
+      input,
+      select,
+      button {
+        width: 80%;
+      }
+      .bottom > button {
+        margin: 10px;
+      }
+      .top > .block {
+        margin: 10px;
+      }
+      .block > p {
+        margin: 10px;
+        width: 100%;
+      }
+      .btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      body {
+        transition: background-color 0.3s ease;
+        background-color: #ffffff; /* Initial background color */
+        color: #333333; /* Default text color */
+      }
+      .dark-mode {
+        background-color: #000000; /* Dark mode background color */
+        color: #ffffff; /* Dark mode text color */
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+      integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <h1>DigiSign</h1>
+
+    <div class="main">
+      <div class="top">
+        <div class="block">
+          <p>Text Color Picker</p>
+          <input
+            type="color"
+            class="form-control"
+            name="colorPicker"
+            id="colorPicker"
+          />
+        </div>
+        <div class="block">
+          <p>Background Color Picker</p>
+          <input
+            type="color"
+            class="form-control"
+            name="canvasColor"
+            id="canvasColor"
+          />
+        </div>
+        <div class="block">
+          <p>Font Size</p>
+          <select
+            class="custom-select"
+            name="fontSizePicker"
+            id="fontSizePicker"
+          >
+            <option value="5">5px</option>
+            <option value="10">10px</option>
+            <option value="15">15px</option>
+            <option value="20">20px</option>
+            <option value="30">30px</option>
+          </select>
+        </div>
+      </div>
+      <canvas class="canvas" id="myCanvas" width="800" height="400"></canvas>
+      <div class="bottom">
+        <button type="button" class="btn btn-warning">Clear</button>
+        <button type="button" class="btn btn-primary">Save and download</button>
+        <button type="button" class="btn btn-success">
+          Retrieve last Sign
+        </button>
+        <button type="button" class="btn" id="toggleBackgroundButton">
+          Toggle Background
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const colorPicker = document.getElementById("colorPicker");
+      const canvasColorPicker = document.getElementById("canvasColor");
+      const clearButton = document.querySelector(".btn-warning");
+      const saveButton = document.querySelector(".btn-primary");
+      const retrieveButton = document.querySelector(".btn-success");
+      const fontSizePicker = document.getElementById("fontSizePicker");
+      const toggleBackgroundButton = document.getElementById(
+        "toggleBackgroundButton"
+      );
+      const body = document.body;
+      const canvas = document.getElementById("myCanvas");
+      const ctx = canvas.getContext("2d");
+
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+      let isDarkMode = false;
+
+      colorPicker.addEventListener("change", (e) => {
+        ctx.strokeStyle = e.target.value;
+        ctx.fillStyle = e.target.value;
+      });
+
+      canvasColorPicker.addEventListener("change", (e) => {
+        ctx.fillStyle = e.target.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      });
+
+      fontSizePicker.addEventListener("change", (e) => {
+        ctx.lineWidth = e.target.value;
+      });
+
+      clearButton.addEventListener("click", () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
+
+      saveButton.addEventListener("click", () => {
+        localStorage.setItem("canvasContent", canvas.toDataURL());
+        let link = document.createElement("a");
+        link.download = "sign.jpg";
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+
+      retrieveButton.addEventListener("click", () => {
+        let savedCanvas = localStorage.getItem("canvasContent");
+        if (savedCanvas) {
+          let img = new Image();
+          img.onload = function () {
+            ctx.drawImage(img, 0, 0);
+          };
+          img.src = savedCanvas;
+        }
+      });
+
+      toggleBackgroundButton.addEventListener("click", () => {
+        isDarkMode = !isDarkMode; // Toggle dark mode state
+
+        if (isDarkMode) {
+          body.classList.add("dark-mode");
+          toggleBackgroundButton.textContent = "Light Background";
+          canvas.style.backgroundColor = "#ffffff"; // Change canvas background to white
+          ctx.fillStyle = "#ffffff"; // Set fill color to white in dark mode
+          ctx.strokeStyle = "#ffffff"; // Set stroke color to white in dark mode
+        } else {
+          body.classList.remove("dark-mode");
+          toggleBackgroundButton.textContent = "Dark Background";
+          canvas.style.backgroundColor = "#ffffff"; // Change canvas background to white
+          ctx.fillStyle = colorPicker.value; // Restore fill color to selected color
+          ctx.strokeStyle = colorPicker.value; // Restore stroke color to selected color
+        }
+      });
+
+      canvas.addEventListener("mousedown", (e) => {
+        isDrawing = true;
+        ctx.beginPath();
+        ctx.moveTo(e.offsetX, e.offsetY);
+        lastX = e.offsetX;
+        lastY = e.offsetY;
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        if (isDrawing) {
+          ctx.lineTo(e.offsetX, e.offsetY);
+          ctx.stroke();
+          lastX = e.offsetX;
+          lastY = e.offsetY;
+        }
+      });
+
+      canvas.addEventListener("mouseup", () => {
+        isDrawing = false;
+      });
+
+      canvas.addEventListener("mouseout", () => {
+        isDrawing = false;
+      });
+    </script>
+  </body>
+</html>
